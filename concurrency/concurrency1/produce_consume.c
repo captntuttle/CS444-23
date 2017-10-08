@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include "mt19937ar.c"
 
-#define BUFFSIZE = 32
+#define BUFFSIZE 32
 
 struct buffer_entry{
 	int num; //random value, must not be 0 if "full"
@@ -29,9 +29,9 @@ struct buffer_arr buffer;
  * 
  *
  */
-void push(buffer_arr *b, buffer_entry e)
+void push(struct buffer_arr *b, struct buffer_entry e)
 {
-	if (b->iter < BUFFSIZE){ // make sure that buffer won't overflow
+	if (b->size < BUFFSIZE){ // make sure that buffer won't overflow
 		b->entries[b->size] = e; // place element in next open array spot
 		b->size++; // iterate forward by 1
 	}
@@ -46,14 +46,14 @@ void push(buffer_arr *b, buffer_entry e)
  *
  *
  */
-buffer_entry pop(buffer_arr *b)
+struct buffer_entry pop(struct buffer_arr *b)
 {
-	buffer_entry temp;
 	if (b->size > 0){
 		return b->entries[b->size--];
 	}
 	else {
 		// shit's empty yo
+		return NULL;
 	}
 }
 
@@ -81,13 +81,21 @@ int check_buffer()
 	return temp;
 }
 
-void * producer()
+void *produce(struct buffer_arr *buffer)
 {
+
+	pthread_mutex_lock(&buffer->stop);
+
+	pthread_mutex_unlock(&buffer->stop);
 
 }
 
-void * consumer()
+void *consume(struct buffer_arr *buffer)
 {
+
+	pthread_mutex_lock(&buffer->stop);
+
+	pthread_mutex_unlock(&buffer->stop);
 
 }
 
