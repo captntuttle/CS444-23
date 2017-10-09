@@ -3,7 +3,9 @@
  * Due: 10/09/17
  */
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <pthread.h>
 #include "mt19937ar.c"
@@ -35,9 +37,6 @@ void push(struct buffer_arr *b, struct buffer_entry e)
 		b->entries[b->size] = e; // place element in next open array spot
 		b->size++; // iterate forward by 1
 	}
-	else {
-		// shit's broke yo
-	}
 }
 
 /* Name: Pop
@@ -51,10 +50,8 @@ struct buffer_entry pop(struct buffer_arr *b)
 	if (b->size > 0){
 		return b->entries[b->size--];
 	}
-	else {
-		// shit's empty yo
-		return NULL;
-	}
+    else
+        return b->entries[b->size];
 }
 
 /* Name: check_buffer
@@ -79,40 +76,6 @@ int check_buffer()
 		temp = 0;
 
 	return temp;
-}
-
-void *produce(struct buffer_arr *buffer)
-{
-	int wait;
-
-	while (true) {
-		struct buffer_entry e;
-		wait = random_num(2, 9);
-		sleep(wait);
-
-		e.work_time = random_num(2, 9);
-		e.num = random_num(0, 10);
-		
-		if (buffer->size < BUFFSIZE) {
-			pthread_mutex_lock(&buffer->lock);
-			push(buffer, e);
-			pthread_mutex_unlock(&buffer->lock);
-			printf("number: %d, wait time: %d\n", e.num, wait);
-		}
-	}
-}
-
-void *consume(struct buffer_arr *buffer)
-{
-	while(true){
-		if (buffer->size > 0){
-			pthread_mutex_lock(&buffer->lock);
-			struct buffer_entry e = pop(buffer);
-			pthread_mutex_unlock(&buffer->unlock);
-			sleep(e.work_time);
-		}
-	}
-
 }
 
 /* Name: asm_rand
@@ -168,9 +131,62 @@ int random_num(int min, int max)
 	return tmp;
 }
 
+void *produce(void *buffer)
+{
+    printf("produce called\n");
+    int wait;
+    struct buffer_arr *b = (struct buffer_arr *)buffer;
+    while (1) {
+        struct buffer_entry e;
+        wait = random_num(3, 7);
+        sleep(wait);
+        
+        e.work_time = random_num(2, 9);
+        e.num = random_num(0, 10);
+        printf("%d\n", b->size);
+        if (b->size < BUFFSIZE) {
+            pthread_mutex_lock(&b->stop);
+            push(b, e);
+            pthread_mutex_unlock(&b->stop);
+            printf("number: %d, wait time: %d\n", e.num, wait);
+        }
+    }
+    return NULL;
+}
+
+void *consume(void *buffer)
+{
+    printf("consume called\n");
+    struct buffer_arr *b = (struct buffer_arr *)buffer;
+    while (1){
+        if (b->size > 0){
+            pthread_mutex_lock(&b->stop);
+            struct buffer_entry e = pop(b);
+            pthread_mutex_unlock(&b->stop);
+            sleep(e.work_time);
+            printf("waited: %d seconds, consumed the number: "
+                   "%d\n", e.work_time, e.num);
+        }
+    }
+    return NULL;
+}
+
 int main()
 {
-	int test;
-	test = check_buffer();
+	struct buffer_arr buffer;
+
+    pthread_t p;
+	pthread_t c;
+
+	pthread_mutex_init(&buffer.stop, NULL);
+	buffer.size = 0;
+    
+    printf("start\n");
+
+	pthread_create(&p, NULL, produce, &buffer);
+	pthread_create(&c, NULL, consume, &buffer);
+
+	//int test;
+	//test = check_buffer();
 	return 0;
 }
