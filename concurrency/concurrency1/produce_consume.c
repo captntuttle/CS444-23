@@ -99,6 +99,23 @@ void *consume(struct buffer_arr *buffer)
 
 }
 
+/* Name: asm_rand
+ * Description: generates a random number using rdrand
+ * Use: gets random number for systems capable of rdrand
+ * Prerequisite: registers set and integer passed
+ * Paramters: integer to store random number
+ */
+int asm_rand(int *tmp)
+{
+	//https://stackoverflow.com/questions/11407103/how-i-can-get-the-random-number-from-intels-processor-with-assembler
+	unsigned char check;
+	asm volatile(
+		"rdrand %0 ; setc %1"
+	       	: "=r"(*tmp), "=qm"(check)
+	);
+	return (int) check;
+}
+
 /* Name: random_num
  * Description: checks if system is compatible with rdrand and generates a number
  * Use: Produce random numbers for consumer/producer work time and entry in buffer
@@ -107,8 +124,32 @@ void *consume(struct buffer_arr *buffer)
  */
 int random_num(int min, int max)
 {
-	return 0;
-	//Need to research inline assembly will complete later
+	int eax, ebx, ecx, edx, tmp = 0;
+	//flag for rdrand
+	//https://codereview.stackexchange.com/questions/147656/checking-if-cpu-supports-rdrand
+	const unsigned int flag_RDRAND = (1 << 30);
+
+	//https://software.intel.com/en-us/forums/intel-isa-extensions/topic/381804
+	eax = 0x01;
+
+	//https://stackoverflow.com/questions/11407103/how-i-can-get-the-random-number-from-intels-processor-with-assembler
+	asm volatile(
+		"cpuid;"
+		: "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
+		: "a"(eax)
+	);
+
+	if (ecx & flag_RDRAND)
+		asm_rand(&tmp);
+	else
+		tmp = (int)genrand_int32();
+
+	tmp = abs(tmp);
+	tmp = tmp % (max - min);
+	if (tmp < min)
+		tmp = min;
+
+	return tmp;
 }
 
 int main()

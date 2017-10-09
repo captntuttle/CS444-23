@@ -1,0 +1,181 @@
+\documentclass[10pt,letterpaper,onecolumn,draftclsnofoot]{IEEEtran}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{longtable}
+\usepackage{tabu}
+\usepackage{listings}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{blue}{rgb}{0, 0, 1}
+
+\lstset{frame=tb,
+	language=bash,
+	columns=flexible,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=4
+}
+
+\begin{document}
+
+\begin{titlepage}
+
+	\title{CS 444 - Fall 2017 - Concurrency 1 \\ Producer and Consumer}
+	\author{Kristen Patterson, Kenneth Steinfeldt}
+	\date{October 10, 2017}
+	\maketitle
+	\vspace{4cm}
+	\begin{abstract}
+		\noindent 
+			\noindent
+		Some sort of abstract.
+	\end{abstract}
+\end{titlepage}
+
+\section{Command Logs}
+The first thing we did to complete running QEMU was we created a repo and cloned in Yocto.
+
+\begin{lstlisting}
+git clone https://github.com/patterkr/CS444-23.git
+cd CS444-23/
+git clone git://git.yoctoproject.org/linux-yocto-3.19
+\end{lstlisting}
+
+Then we made sure to run the right version specified in the assignment.
+
+\begin{lstlisting}
+git checkout v3.19.2
+\end{lstlisting}
+
+Before we could run the qemu we had to copy over the starting kernel and the
+drive file.
+
+\begin{lstlisting}
+cp /scratch/files/bzImage-qemux86.bin /scratch/fall2017/23/CS444-23/linux-yocto-3.19
+cp /scracth/files/core-image-lsb-sdk-qemux86.ext4 /scratch/fall2017/23/CS444-23/linux-yocto-3.19
+\end{lstlisting}
+
+Then we entered bash to source the environment.
+
+\begin{lstlisting}
+source /scratch/opt/poky/1.8/environment-setup-i586-poky-linux
+\end{lstlisting}
+
+After it was properly sourced and the files were copied over, we ran the really
+long qemu command replacing ???? with our port which was 5523.
+
+\begin{lstlisting}
+qemu-system-i386 -gdb tcp::5523 -S -nographic -kernel bzImage-qemux86.bin 
+-drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio -enable-kvm -net none 
+-usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug".
+\end{lstlisting}
+
+Now that the QEMU was in debug mode, we opened up a new terminal and ran code
+in bash to connect to it using our port 5523.
+
+\begin{lstlisting}
+source /scratch/opt/poky/1.8/environment-setup-i586-poky-linux
+$GDB
+target remote : 5523
+continue
+\end{lstlisting}
+
+Next we needed to build Yocto so we opened another new terminal window and
+copied over the configure files and made it using the allotted 4 jobs.
+
+\begin{lstlisting}
+cp /scratch/files/config-3.19.2-yocto-standard 
+/scratch/fall2017/23/CS444-23/linux-yocto-3.19/.config
+make -j4 all
+\end{lstlisting}
+
+Finally, to make sure it worked, we went back to the terminal where we
+connected to the QEMU with GDB, logged into root, and ran the following commands.
+
+\begin{lstlisting}
+uname -r
+\end{lstlisting}
+
+Which showed that we were running in Yocto standard.
+
+\section{Concurrency Solution}
+
+\section{QEMU Flags Explanation}
+\subsection{gdb}
+Wait for gdb connection on tcp::5523.
+
+\subsection{S}
+Do not start CPU at startup.
+
+\subsection{nographic}
+Totally disable graphical output so QEMU is a simple command line application.
+
+\subsection{kernel}
+Use bzImage as kernel image.
+
+\subsection{drive}
+Defines a new drive file.
+
+\subsection{enable-kvm}
+Enables KVM full virtualization support. KVM is Kernel Virtual Machine.
+
+\subsection{net}
+Indicate that no network devices should be configured.
+
+\subsection{usb}
+Enable the usb driver.
+
+\subsection{localtime}
+Use local date and time.
+
+\subsection{no-reboot}
+Exit instead of rebooting
+
+\subsection{append}
+Use cmdline as kernel command line.
+
+\section{Concurrency Questions}
+\subsection{What do you think the main point of this assignment is?}
+
+\subsection{How did you personally approach the problem?}
+
+\subsection{How did you ensure your solution was correct?}
+
+\subsection{What did you learn?}
+
+\section{Version Control Log}
+
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		\textbf{Author} & \textbf{Date} & \textbf{Message} \\ \hline
+		Kristen Patterson & October 4, 2017 & Initial commit \\ \hline
+		Kristen Patterson & October 4, 2017 & Update README.md \\ \hline
+		Kristen Patterson & October 4, 2017 & Built the kernel \\ \hline
+		Kristen Patterson & October 7,2017 & Started concurrency programming, implemented buffer, need to research inline asm \\ \hline
+		Ken Steinfeldt & October 8, 2017 & create stack(ish) and start p and c funcs \\ \hline
+		Ken Steinfeldt & October 8, 2017 & begin produce and consume funcs \\ \hline
+		Ken Steinfeldt & October 8, 2017 & Merge pull request 1 from patterkr/implement-stack \\ \hline
+		Kristen Patterson & October 9, 2017 & Implemented rng and started tex doc \\ \hline
+	\end{tabular}
+\end{center}
+
+\section{Work Log}
+\subsection{Kristen Patterson}
+I started working on Wednesday, October 4th. I first setup the environment and 
+did all the commands the properly build and run the kernel. It took me about 
+3 hours to setup the environment and build the kernel. Then on Saturday the 7th
+I started the concurrency assignment by bringing in the mt19937ar.c and the 
+Makefile. I also implemented some of the buffer to be used as well as a 
+function to check if it was empty or full. Then on Monday the 9th I finished 
+the random number generator function and finished my half of the tex document.
+
+\subsection{Ken Steinfeldt}
+
+\end{document}
