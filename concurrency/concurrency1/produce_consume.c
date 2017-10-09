@@ -83,19 +83,35 @@ int check_buffer()
 
 void *produce(struct buffer_arr *buffer)
 {
+	int wait;
 
-	pthread_mutex_lock(&buffer->stop);
+	while (true) {
+		struct buffer_entry e;
+		wait = random_num(2, 9);
+		sleep(wait);
 
-	pthread_mutex_unlock(&buffer->stop);
-
+		e.work_time = random_num(2, 9);
+		e.num = random_num(0, 10);
+		
+		if (buffer->size < BUFFSIZE) {
+			pthread_mutex_lock(&buffer->lock);
+			push(buffer, e);
+			pthread_mutex_unlock(&buffer->lock);
+			printf("number: %d, wait time: %d\n", e.num, wait);
+		}
+	}
 }
 
 void *consume(struct buffer_arr *buffer)
 {
-
-	pthread_mutex_lock(&buffer->stop);
-
-	pthread_mutex_unlock(&buffer->stop);
+	while(true){
+		if (buffer->size > 0){
+			pthread_mutex_lock(&buffer->lock);
+			struct buffer_entry e = pop(buffer);
+			pthread_mutex_unlock(&buffer->unlock);
+			sleep(e.work_time);
+		}
+	}
 
 }
 
