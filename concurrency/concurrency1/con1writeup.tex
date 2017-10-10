@@ -142,12 +142,29 @@ Use cmdline as kernel command line.
 
 \section{Concurrency Questions}
 \subsection{What do you think the main point of this assignment is?}
+The main point of this assignment to 1) prepare the computing environment that we 
+will require as this class moves forward and 2) to prepare our minds for what this 
+class will require going forward. The primary purpose of the concurrency problem 
+is to get us thinking about how these concurrency problems can be solved. In this 
+case, the answer was by having one thread wait on another thread. This is probably 
+among the simplist ways to think about the problem, and more complicated solutions 
+will surely follow.
 
 \subsection{How did you personally approach the problem?}
+The concurrency problem was approached visually; in order to better understand 
+what the problem required in a solution, and what it meant to have a consumer thread
+wait on a producer thread, etc. The problem was also approached with research, as in 
+the case of the randomization, as that method was not known to us as a group. by 
+researching the problem we were able to successfully implement a solution.
 
 \subsection{How did you ensure your solution was correct?}
+We ensured our solution was correct through simple observation of print statements.
 
 \subsection{What did you learn?}
+The primary take-away is that we need to start these assignments earlier, because they 
+are hard. The technical takeaways are that asm can be used and manipulated in C code, 
+and how to use the pthread library in a less contrived and more organized way (by this 
+I mean encapsulated in structs)
 
 \section{Version Control Log}
 
@@ -166,6 +183,7 @@ Use cmdline as kernel command line.
 		Ken Steinfeldt & October 9, 2017 & filling in produce and consume \\ \hline
 		Ken Steinfeldt & October 9, 2017 & attempted finish, not working \\ \hline
 		Ken Steinfeldt & October 9, 2017 & trace statements, bug chasing \\ \hline
+		Ken Steinfeldt & October 9, 2017 & joined threads to make things actually work \\ \hline
 	\end{tabular}
 \end{center}
 
@@ -187,6 +205,6 @@ assignment. On October 8 I submitted two commits. The first commit implemented
 an array based stack with push and pop functions this was about 3-4 hours of 
 work. The second commit began work on the produce and consume functions. On 
 October 9 I made 3 sequential commits. These commits filled out the produce, 
-consume, and main functions to finish the program. This was about 5 hours of work.
+consume, and main functions to finish the program. This was about 6 hours of work.
 
 \end{document}
