@@ -34,7 +34,15 @@
 	\begin{abstract}
 		\noindent 
 			\noindent
-		Some sort of abstract.
+		Concurrency is dividing a program, problem, or algorithm into 
+		smaller components that can be run on their own. Doing so allows 
+		the use of multiple processes being ran at the same time thus 
+		decreasing the time need to finish its job. The Producer-Consumer 
+		concurrency problem is one such multi-process synchronization 
+		problem. It entails a producer making an item and storing it in 
+		a buffer over and over again while the consumer takes the item 
+		from the buffer one at a time. We have recreated this problem 
+		using C and Assembly.
 	\end{abstract}
 \end{titlepage}
 
@@ -105,6 +113,12 @@ uname -r
 Which showed that we were running in Yocto standard.
 
 \section{Concurrency Solution}
+Our concurrency program was implemented using pthread mutex. We create two 
+threads, one for the producer the other for the consumer, and we create a buffer 
+using a stack. The producer will create entries in the buffer while the consumer 
+will consume those entries. Consumer will not take from an empty buffer and 
+producer will not try to create an entry for a full buffer. This will allow 
+both threads to run without encountering an error.
 
 \section{QEMU Flags Explanation}
 \subsection{gdb}
@@ -142,12 +156,28 @@ Use cmdline as kernel command line.
 
 \section{Concurrency Questions}
 \subsection{What do you think the main point of this assignment is?}
+I believe the main point of this assignment was to familiarize us with 
+concurrency problems and introduce synchronization. I also think it helped to 
+introduce pthreads and refresh some of our knowledge from OS1.
 
 \subsection{How did you personally approach the problem?}
+Personally I started with the random number functions as assembly in C seemed 
+the most daunting task I should first overcome after some searching I had found 
+the necessary information to help me develop and test it properly. Then I 
+focused on producing and consuming and trying to figure out how pthreads worked.
 
 \subsection{How did you ensure your solution was correct?}
+In order to ensure our program worked we first made sure all our functions 
+would compile. Then we focused on testing the random number generator to make 
+sure it would properly function. After that we put many print statements in 
+produce and consume to check the progress and make sure it was completing their tasks.
 
 \subsection{What did you learn?}
+There were two main topics I learned from this assignment. First I learned 
+about pthreads and using synchronization. Second I learned a lot about 
+information stored on registers and how to use assembly in C. I didn’t know 
+that using assembly in C was possible. I was also unaware of the existence of 
+rdrand and that it is not compatible with some systems out there.
 
 \section{Version Control Log}
 
@@ -166,6 +196,10 @@ Use cmdline as kernel command line.
 		Ken Steinfeldt & October 9, 2017 & filling in produce and consume \\ \hline
 		Ken Steinfeldt & October 9, 2017 & attempted finish, not working \\ \hline
 		Ken Steinfeldt & October 9, 2017 & trace statements, bug chasing \\ \hline
+		Ken Steinfeldt & October 9, 2017 & Update con1writeup.tex \\ \hline
+		Ken Steinfeldt & October 9, 2017 & Joined threads to make things actually work \\ \hline
+		Ken Steinfeldt & October 9, 2017 & Merge master branch \\ \hline
+		Kristen Patterson & October 9, 2017 & Final version \\ \hline
 	\end{tabular}
 \end{center}
 
