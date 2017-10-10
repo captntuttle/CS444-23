@@ -16,66 +16,45 @@ struct buffer_entry{
 	int num; //random value, must not be 0 if "full"
 	int work_time; //random time to consume the thread
 };
+typedef struct buffer_entry buffer_entry;
 
 struct buffer_arr{
 	struct buffer_entry entries[BUFFSIZE]; //size specified in assignment
 	int size; // current end of buffer struct array
 	pthread_mutex_t stop; //locks buffer
 };
-
-struct buffer_arr buffer;
+typedef struct buffer_arr buffer_arr;
 
 /* Name: push
  * Description: Pushes a buffer_entry struct onto the buffer_arr stack
  * Use: To add to buffer
- * 
- *
+ * Prerequisite: initialized buffer_arr object
+ * Parameters: buffer array object
  */
-void push(struct buffer_arr *b, struct buffer_entry e)
+void push(buffer_arr *b, buffer_entry e)
 {
 	if (b->size < BUFFSIZE){ // make sure that buffer won't overflow
-		b->entries[b->size] = e; // place element in next open array spot
-		b->size++; // iterate forward by 1
+		b->entries[b->size++] = e; // place element in next open array spot
 	}
+    else
+        printf("error, stack full");
 }
 
 /* Name: Pop
  * Description: Returns top of stack
  * Use: Get top of stack
- *
- *
+ * Prerequisite: initialized buffer_arr object
+ * Parameters: buffer array object
  */
-struct buffer_entry pop(struct buffer_arr *b)
+buffer_entry pop(buffer_arr *b)
 {
 	if (b->size > 0){
-		return b->entries[b->size--];
+        b->size--;
+		return b->entries[b->size];
 	}
     else
+        printf("cannot pop. empty stack");
         return b->entries[b->size];
-}
-
-/* Name: check_buffer
- * Description: Checks buffer entries, returns 1 if empty, 2 if full, 0 if neither
- * Use: Conditional to block consumers if empty and block producers if full
- * Prerequisite: buffer must be defined
- * Parameters: N/A
- */
-int check_buffer()
-{
-	int x, temp, empty = 0;
-	for(x = 0; x < 32; x++){
-		if(buffer.entries[x].num == 0)
-			empty++;
-	}
-
-	if(empty == 32)
-		temp = 1;
-	else if(empty == 0)
-		temp = 2;
-	else
-		temp = 0;
-
-	return temp;
 }
 
 /* Name: asm_rand
@@ -131,71 +110,71 @@ int random_num(int min, int max)
 	return tmp;
 }
 
+/* Name: Produce
+ * Description: randomly fills buffer_arr stack with buffer_entry objects
+ * Parameters: buffer_arr object to be cast in function
+ */
 void *produce(void *buffer)
 {
-    printf("produce called\n");
     int wait;
-    struct buffer_arr *b = (struct buffer_arr *)buffer;
+    buffer_arr *b = (buffer_arr *)buffer;
+    
     while (1) {
-        printf("produce while loop entered\n");
-        struct buffer_entry e;
+        buffer_entry e;
         wait = random_num(3, 7);
-        printf("produce wait = %d\n", wait);
         sleep(wait);
         
         e.work_time = random_num(2, 9);
         e.num = random_num(0, 10);
         
         pthread_mutex_lock(&b->stop);
-        int test = b->size;
-        pthread_mutex_unlock(&b->stop);
-        
-        printf("b->size = %d\n", test);
-        
         if (b->size < BUFFSIZE) {
-            pthread_mutex_lock(&b->stop);
             push(b, e);
-            pthread_mutex_unlock(&b->stop);
-            printf("number: %d, wait time: %d\n", e.num, wait);
+            printf("produced number: %d, wait time: %d\n", e.num, wait);
         }
+        pthread_mutex_unlock(&b->stop);
     }
     return NULL;
 }
 
+/* Name: Consume
+ * Description: consumes buffer_entry objects out of buffer_arr stack
+ * Parameters: buffer_arr object to be cast in function
+ */
 void *consume(void *buffer)
 {
-    printf("consume called\n");
-    struct buffer_arr *b = (struct buffer_arr *)buffer;
-    printf("consume b->size = %d\n", b->size);
+    buffer_arr *b = (buffer_arr *)buffer;
+    
     while (1){
+        pthread_mutex_lock(&b->stop);
         if (b->size > 0){
-            pthread_mutex_lock(&b->stop);
-            struct buffer_entry e = pop(b);
-            pthread_mutex_unlock(&b->stop);
+            buffer_entry e = pop(b);
             sleep(e.work_time);
             printf("waited: %d seconds, consumed the number: "
                    "%d\n", e.work_time, e.num);
         }
+        pthread_mutex_unlock(&b->stop);
     }
     return NULL;
 }
 
 int main()
 {
-	struct buffer_arr buffer;
+    printf("start\n");
+    
+	buffer_arr buffer;
     buffer.size = 0;
 
     pthread_t p;
 	pthread_t c;
 
 	pthread_mutex_init(&buffer.stop, NULL);
-    
-    printf("start\n");
 
 	pthread_create(&p, NULL, produce, &buffer);
 	pthread_create(&c, NULL, consume, &buffer);
-
-	//int test;
-	//test = check_buffer();
+    
+    pthread_join(p, NULL);
+    pthread_join(c, NULL);
+     
 	return 0;
 }
