@@ -137,13 +137,21 @@ void *produce(void *buffer)
     int wait;
     struct buffer_arr *b = (struct buffer_arr *)buffer;
     while (1) {
+        printf("produce while loop entered\n");
         struct buffer_entry e;
         wait = random_num(3, 7);
+        printf("produce wait = %d\n", wait);
         sleep(wait);
         
         e.work_time = random_num(2, 9);
         e.num = random_num(0, 10);
-        printf("%d\n", b->size);
+        
+        pthread_mutex_lock(&b->stop);
+        int test = b->size;
+        pthread_mutex_unlock(&b->stop);
+        
+        printf("b->size = %d\n", test);
+        
         if (b->size < BUFFSIZE) {
             pthread_mutex_lock(&b->stop);
             push(b, e);
@@ -158,6 +166,7 @@ void *consume(void *buffer)
 {
     printf("consume called\n");
     struct buffer_arr *b = (struct buffer_arr *)buffer;
+    printf("consume b->size = %d\n", b->size);
     while (1){
         if (b->size > 0){
             pthread_mutex_lock(&b->stop);
@@ -174,12 +183,12 @@ void *consume(void *buffer)
 int main()
 {
 	struct buffer_arr buffer;
+    buffer.size = 0;
 
     pthread_t p;
 	pthread_t c;
 
 	pthread_mutex_init(&buffer.stop, NULL);
-	buffer.size = 0;
     
     printf("start\n");
 
