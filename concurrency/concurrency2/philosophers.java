@@ -29,11 +29,11 @@ class Chopstick{
 				if(!clean){
 					try{
 						sem.acquire();
-						this.unclean = false;
-						System.out.println("Chopstick " 
-								+ id + " is going from "
-								+ mainuser + " to "
-								+ user);
+						this.clean = true;
+						System.out.println(user + " receives Chopstick " 
+								+ id + " from "
+								+ mainuser);
+						this.mainuser = user;
 					} catch(InterruptedException ex){
 						Thread.currentThread().interrupt();
 					} finally{
@@ -42,7 +42,8 @@ class Chopstick{
 				} else {
 					System.out.println("Attempt to give Chopstick from "
 							+ mainuser + " to " + user
-							+ " but failed.");
+							+ " failed.");
+					wait();
 				}
 			} catch(InterruptedException ex){
 				Thread.currentThread().interrupt();
@@ -116,14 +117,51 @@ class Philosopher extends Thread{
 		}
 	}
 
-	public void actions(){
+	public void run(){
 		while(true){
 			think();
 			rightChopstick.grabChopstick(philo_name);
 			leftChopstick.grabChopstick(philo_name);
-			eat;
+			eat();
 			rightChopstick.setChopstick();
 			leftChopstick.setChopstick();
 		}
+	}
+}
+
+public class philosophers{
+	private Philosopher[] philos;
+	public Chopstick[] chopsticks;
+	//Why's it gotta be real people I coulda had fun and made a funny
+	public String[] philo_names = {"Todd Howard", "Phil Spencer", "David Dague", "Hideo Kojima", "Shigeru Miyamoto"};
+
+	public philosophers(){
+		chopsticks = new Chopstick[5];
+		philos = new Philosopher[5];
+		int cid, setChopstick;
+
+		for(int i = 0; i < chopsticks.length; i++){
+			cid = 0;
+			setChopstick = ((i + 4) % 5);
+		
+			if(i < setChopstick)
+				cid = i;
+			else
+				cid = setChopstick;
+
+			Chopstick chopstick = new Chopstick(i, philo_names[cid]);
+			System.out.println(philo_names[cid] + " holds chopstick "
+					+ i);
+			chopsticks[i] = chopstick;
+		}
+
+		for(int j = 0; j < philos.length; j++){
+			philos[j] = new Philosopher(philo_names[j], chopsticks[j], chopsticks[(j + 1) % 5]);
+			philos[j].start();
+		}
+	}
+
+	public static void main(String[] args){
+		new philosophers();
 	}
 }
