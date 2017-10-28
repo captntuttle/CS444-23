@@ -70,7 +70,31 @@ static int init_sstf(struct request_queue *queue, struct elevator_type *elev)
  */
 static void add_req(struct request_queue *queue, struct request *req)
 {
-
+    struct sstf_data *nd = q->elevator->elevator_data;
+    struct request *next, *prev;
+    
+    if (list_empty(&nd->queue)){  // list is empty, our work here is done.
+        list_add(&req->queuelist, &nd->queue);
+    } else { // find right place for request
+        next = list_entry(nd->queue.next, struct request, queuelist)
+        prev = list_entry(nd->queue.prev, struct request, queuelist)
+        
+        if (blk_rq_pos(req)) > blk_rq_pos(next){
+            while (blk_rq_pos(req) > blk_rq_pos(next)) {
+                prev = next;
+                next = list_entry(next->queuelist.next, struct request, queuelist);
+            }
+            
+            list_add(&req->queuelist, &prev->queuelist);
+        } else {
+            while (blk_rq_pos(req) > blk_rq_pos(prev)) {
+                next = prev;
+                prev = list_entry(prev->queuelist.prev, struct request, queuelist)
+            }
+            
+            list_add(&req->queuelist, &next->queuelist)
+        }
+    }
 }
 
 /* Name: former_req
