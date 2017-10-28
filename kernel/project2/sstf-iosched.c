@@ -140,7 +140,16 @@ static void merge_req(struct request_queue *queue, struct request *req, struct r
  */
 static int dispatch_req(struct request_queue, *queue, int force)
 {
-
+    struct sstf_data *nd = q->elevator->elevator_data;
+    
+    if  (!list_empty(&nd->queue)){
+        struct request *req;
+        req = list_entry(nd->queue.next, struct request, queuelist);
+        list_del_init(&req->queuelist);
+        elv_dispatch_sort(queue, req);
+        return 1;
+    }
+    return 0;
 }
 
 /* Name: exit_sstf
