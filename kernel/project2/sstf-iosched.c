@@ -70,7 +70,7 @@ static int init_sstf(struct request_queue *queue, struct elevator_type *elev)
  */
 static void add_req(struct request_queue *queue, struct request *req)
 {
-    struct sstf_data *nd = q->elevator->elevator_data;
+    struct sstf_data *nd = queue->elevator->elevator_data;
     struct request *next, *prev;
     
     if (list_empty(&nd->queue)){  // list is empty, our work here is done.
