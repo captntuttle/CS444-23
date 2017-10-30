@@ -43,6 +43,6 @@ showps: $(PSF)
 	@for i in $(PSF) ; do $(GH) $$i & done
 
 clean:
-	rm -f *.pdf *.ps *.dvi *.out *.log *.aux *.bbl *.blg *.pyg *.o run_conc
+	rm -f *.pdf *.ps *.dvi *.out *.log *.aux *.bbl *.blg *.pyg *.log *.aux
 															
 .PHONY: all show clean ps pdf showps

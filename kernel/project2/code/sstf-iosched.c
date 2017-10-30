@@ -2,33 +2,17 @@
  * Date: October 30, 2017
  * Name: sstf-iosched.c
  */
-#include <linux/init.h>
-#include <linux/elevator.h>
 #include <linux/blkdev.h>
-#include <linux/bio.h>
+#include <linux/elevator.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/init.h>
 
 //Main data type to store requests
 struct sstf_data{
 	struct list_head queue;
 	int dir;
 	sector_t head;
-};
-
-//http://elixir.free-electrons.com/linux/v4.9/source/include/linux/elevator.h
-static struct elevator_type elevator_sstf = {
-	.ops = {
-		.elevator_init_fn = init_sstf,
-		.elevator_add_req_fn = add_req,
-		.elevator_former_req_fn = former_req,
-		.elevator_latter_req_fn = latter_req,
-		.elevator_merge_req_fn = merg_req,
-		.elevator_dispatch_fn = dispatch_req,
-		.elevator_exit_fn = exit_sstf,
-	},
-	.elevator_name = "LOOK",
-	.elevator_owner = THIS_MODULE,
 };
 
 /* Name: init_sstf
@@ -72,16 +56,20 @@ static void add_req(struct request_queue *queue, struct request *req)
 {
     struct sstf_data *nd = queue->elevator->elevator_data;
     struct request *next, *prev;
+
+    printk("LOOK: add_req() - Starting up.\n");
     
-    struct request *iter
+    struct request *iter;
     
     if (list_empty(&nd->queue)){  // list is empty, our work here is done.
+	printk("add_req() - List is empty.\n");
         list_add(&req->queuelist, &nd->queue);
     } else { // find right place for request
-        next = list_entry(nd->queue.next, struct request, queuelist)
-        prev = list_entry(nd->queue.prev, struct request, queuelist)
+	printk("add_req() - Searching for a place for the request.\n");
+        next = list_entry(nd->queue.next, struct request, queuelist);
+        prev = list_entry(nd->queue.prev, struct request, queuelist);
         
-        if (blk_rq_pos(req)) > blk_rq_pos(next){
+        if (blk_rq_pos(req) > blk_rq_pos(next)){
             while (blk_rq_pos(req) > blk_rq_pos(next)) {
                 prev = next;
                 next = list_entry(next->queuelist.next, struct request, queuelist);
@@ -91,13 +79,13 @@ static void add_req(struct request_queue *queue, struct request *req)
         } else {
             while (blk_rq_pos(req) > blk_rq_pos(prev)) {
                 next = prev;
-                prev = list_entry(prev->queuelist.prev, struct request, queuelist)
+                prev = list_entry(prev->queuelist.prev, struct request, queuelist);
             }
             
-            list_add(&req->queuelist, &next->queuelist)
+            list_add(&req->queuelist, &next->queuelist);
         }
         list_for_each_entry(iter, &nd->queue, queuelist) {
-            printk("entry: %lu\n", (unsigned long) blk_rq_pos(iter))
+            printk("entry: %lu\n", (unsigned long) blk_rq_pos(iter));
         }
     }
 }
@@ -143,9 +131,9 @@ static void merge_req(struct request_queue *queue, struct request *req, struct r
  * Description: Main portion of code, runs the actual elevator
  * Parameters: request queue, force
  */
-static int dispatch_req(struct request_queue, *queue, int force)
+static int dispatch_req(struct request_queue *queue, int force)
 {
-    struct sstf_data *nd = q->elevator->elevator_data;
+    struct sstf_data *nd = queue->elevator->elevator_data;
     
     if  (!list_empty(&nd->queue)){
         struct request *req;
@@ -169,6 +157,21 @@ static void exit_sstf(struct elevator_queue *elev)
 	kfree(data);
 }
 
+//http://elixir.free-electrons.com/linux/v4.9/source/include/linux/elevator.h
+static struct elevator_type elevator_sstf = {
+	.ops = {
+		.elevator_init_fn = init_sstf,
+		.elevator_add_req_fn = add_req,
+		.elevator_former_req_fn = former_req,
+		.elevator_latter_req_fn = latter_req,
+		.elevator_merge_req_fn = merge_req,
+		.elevator_dispatch_fn = dispatch_req,
+		.elevator_exit_fn = exit_sstf,
+	},
+	.elevator_name = "LOOK",
+	.elevator_owner = THIS_MODULE,
+};
+
 /* Name: elev_init
  * Description: Initializes the elevator
  * Parameters: N/A
@@ -182,7 +185,7 @@ static int __init elev_init(void)
  * Description: exits out of the elevator
  * Parameters: N/A
  */
-static void __exit elev_exit{void}
+static void __exit elev_exit(void)
 {
 	elv_unregister(&elevator_sstf);
 }
