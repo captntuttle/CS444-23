@@ -1,19 +1,48 @@
-obj-$(CONFIG_BLOCK) := elevator.o blk-core.o blk-tag.o blk-sysfs.o \
-			blk-flush.o blk-settings.o blk-ioc.o blk-map.o \
-			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
-			blk-iopoll.o blk-lib.o blk-mq.o blk-mq-tag.o \
-			blk-mq-sysfs.o blk-mq-cpu.o blk-mq-cpumap.o ioctl.o \
-			genhd.o scsi_ioctl.o partition-generic.o partitions/
+LATEX	= latex -shell-escape
+#BIBTEX	= bibtex
+DVIPS	= dvips
+DVIPDF  = dvipdft
+XDVI	= xdvi -gamma 4
+GH		= gv
 
-obj-$(CONFIG_BLK_DEV_BSG)	+= bsg.o
-obj-$(CONFIG_BLK_DEV_BSGLIB)	+= bsg-lib.o
-obj-$(CONFIG_BLK_CGROUP)	+= blk-cgroup.o
-obj-$(CONFIG_BLK_DEV_THROTTLING)	+= blk-throttle.o
-obj-$(CONFIG_IOSCHED_NOOP)	+= noop-iosched.o
-obj-$(CONFIG_IOSCHED_DEADLINE)	+= deadline-iosched.o
-obj-$(CONFIG_IOSCHED_CFQ)	+= cfq-iosched.o
-obj-$(CONFIG_IOSCHED_LOOK)	+= sstf-iosched.o
+EXAMPLES = $(wildcard *.c)
+SRC	:= $(shell egrep -l '^[^%]*\\begin\{document\}' *.tex)
+TRG	= $(SRC:%.tex=%.dvi)
+PSF	= $(SRC:%.tex=%.ps)
+PDF	= $(SRC:%.tex=%.pdf)
 
-obj-$(CONFIG_BLOCK_COMPAT)	+= compat_ioctl.o
-obj-$(CONFIG_BLK_DEV_INTEGRITY)	+= blk-integrity.o
-obj-$(CONFIG_BLK_CMDLINE_PARSER)	+= cmdline-parser.o
+all: pdf
+
+pdf: $(PDF)
+	
+ps: $(PSF)
+	
+$(TRG): %.dvi: %.tex $(EXAMPLES)
+	#one way of including source code is to use pygments
+	#pygmentize -f latex -o __${EXAMPLES}.tex ${EXAMPLES}
+	#requires that you \include{pygments.tex} in your preamble
+				
+	$(LATEX) $<
+	#$(BIBTEX) $(<:%.tex=%)
+	$(LATEX) $<
+	$(LATEX) $<
+	#remove the pygmentized output to avoid cluttering up the directory
+	#rm __${SRC}.tex
+										
+										
+$(PSF):%.ps: %.dvi
+	$(DVIPS) -R -Poutline -t letter $< -o $@
+											
+$(PDF): %.pdf: %.ps
+	ps2pdf $<
+												
+show: $(TRG)
+	@for i in $(TRG) ; do $(XDVI) $$i & done
+													
+showps: $(PSF)
+	@for i in $(PSF) ; do $(GH) $$i & done
+
+clean:
+	rm -f *.pdf *.ps *.dvi *.out *.log *.aux *.bbl *.blg *.pyg *.o run_conc
+															
+.PHONY: all show clean ps pdf showps
