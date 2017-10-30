@@ -73,6 +73,8 @@ static void add_req(struct request_queue *queue, struct request *req)
     struct sstf_data *nd = queue->elevator->elevator_data;
     struct request *next, *prev;
     
+    struct request *iter
+    
     if (list_empty(&nd->queue)){  // list is empty, our work here is done.
         list_add(&req->queuelist, &nd->queue);
     } else { // find right place for request
@@ -93,6 +95,9 @@ static void add_req(struct request_queue *queue, struct request *req)
             }
             
             list_add(&req->queuelist, &next->queuelist)
+        }
+        list_for_each_entry(iter, &nd->queue, queuelist) {
+            printk("entry: %lu\n", (unsigned long) blk_rq_pos(iter))
         }
     }
 }
