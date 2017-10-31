@@ -71,9 +71,9 @@ We also learned various algorithms throughout the process of completing this ass
 
 \subsection{How should the TA test your program?}
 In order to test our program you must first setup the proper Linux Yocto.
-This is done by doing the first part of assignment 1, namely, having it cloned from git, checking out the correct version copying over the required files for QEMU, and sourcing the right file.
-After that is done then you must copy over our files sstf-iosched.c, Makefile, and Kconfig.iosched included in our code directory to the block directory located in the cloned linux-yocto.
-After that is done you must manually change the I/O scheduler by typing make menuconfig and selecting enable block layer and then selecting I/O schedulers.
+This is done by doing the first part of assignment 1, namely, having it cloned from git, checking out the correct version, copying over the required files for QEMU, and sourcing the right file.
+After that is done then you must copy over our files sstf-iosched.c, Makefile, and Kconfig.iosched in our patch to the block directory located in the cloned linux-yocto.
+After that is done you must manually change the I/O scheduler by typing make menuconfig and selecting enable block layer and then selecting I/O schedulers - make sure to save.
 After that is done you just need to exit out of menuconfig and type make -j4 all.
 After the kernel is made then you just need to input the following code.
 
