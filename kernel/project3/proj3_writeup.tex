@@ -1,0 +1,151 @@
+\documentclass[10pt,letterpaper,onecolumn,draftclsnofoot]{IEEEtran}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{longtable}
+\usepackage{tabu}
+\usepackage{listings}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{blue}{rgb}{0, 0, 1}
+
+\lstset{frame=tb,
+	language=bash,
+	columns=flexible,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=4
+}
+
+\begin{document}
+
+\begin{titlepage}
+
+	\title{CS 444 - Fall 2017 - Project 3 \\ Encrypted Block Device}
+	\author{Kristen Patterson, Kenneth Steinfeldt}
+	\date{November 13, 2017}
+	\maketitle
+	\vspace{4cm}
+	\begin{abstract}
+		\noindent 
+			\noindent
+	\end{abstract}
+\end{titlepage}
+
+\section{Project Design}
+
+\section{Project Questions}
+\subsection{What do you think the main point of this assignment is?}
+
+\subsection{How did you personally approach the problem?}
+
+\subsection{How did you ensure your solution was correct?}
+
+\subsection{What did you learn?}
+
+\subsection{How should the TA test your program?}
+Firstly start by taking the files from the patch file submitted and putting them in linux-yocto-3.19/drivers/block/.
+Then after sourcing the environment correctly through the file provided in the opt/ directory do a git checkout for v3.19.2.
+Afterwards type make -j4 all and wait for it to compile. After it is done use the following qemu command:
+
+\begin{lstlisting}
+qemu-system-i386 -gdb tcp::5523 -S -nographic -kernel arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4,if=ide -enable-kvm -usb -localtime --no-reboot --append "root=/dev/hda rw console=ttyS0 debug"
+\end{lstlisting}
+
+After that is done open a new terminal and connect to it using the following code:
+
+\begin{lstlisting}
+$GDB
+target remote : 5523
+continue
+\end{lstlisting}
+
+After you are connected log in to root on the terminal with the kernel running.
+When you log in you need to scp the .ko file over by doing the following.
+I don't know how your directories are setup so I will show how I did mine.
+
+\begin{lstlisting}
+scp patterkr@os2.engr.oregonstate.edu:/scratch/fall2017/23/CS444-23/new_kernel/linux-yocto-3.19/drivers/block/sbd.ko /home/root
+\end{lstlisting}
+
+It should ask for a login password and then copy it over
+Then you need to install the module while setting the key like so:
+
+\begin{lstlisting}
+insmod sbd.ko key="1234567890123456" keylen=16
+\end{lstlisting}
+
+After that is done then you need to run the command to make a partition and follow the steps to do so:
+
+\begin{lstlisting}
+fdisk /dev/sbd0
+n //makes a new partition
+p //selects primary
+1 //selects partition number
+//select first sector
+//select last sector
+p //builds partition
+w //saves it
+\end{lstlisting}
+
+Next you need to make a filesystem for the partition
+
+\begin{lstlisting}
+mkfs.ext2 /dev/sbd0p1
+\end{lstlisting}
+
+When the filesystem is made you need to make a directory to mount it to:
+
+\begin{lstlisting}
+mkdir test
+\end{lstlisting}
+
+After the directory has been created you need to mount the filesystem:
+
+\begin{lstlisting}
+mount /dev/sbd0p1 test
+\end{lstlisting}
+
+After it has been mounted you can make a demofile that holds some text in it:
+
+\begin{lstlisting}
+touch test/demo
+echo "Hello world!" > test/demo
+\end{lstlisting}
+
+Finally you can cat both the partition and the demo file to see the original contents and gibberish from the partition.
+
+\begin{lstlisting}
+cat test/demo
+cat /dev/sbd0p1
+\end{lstlisting}
+
+This should prove we have successfully created an encrypted block device.
+
+\section{Version Control Log}
+
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		\textbf{Author} & \textbf{Date} & \textbf{Message} \\ \hline
+		Ken Steinfeldt & November 7, 2017 & creates project3 dir and start file \\ \hline
+		Ken Steinfeldt & November 7, 2017 & assignment name header \\ \hline
+		Kristen Patterson & November 8, 2017 & finished file \\ \hline
+	\end{tabular}
+\end{center}
+
+\section{Work Log}
+\subsection{Kristen Patterson}
+I started work on Wednesday and worked all day until it was mostly complete. 
+I started by finishing up the sbd.c file to use in the block device.
+Then I found a working Makefile and Kconfig to transfer over with it. 
+Afterwards I went about making sure it would compile and then figuring out how to run it to get it to work.
+
+\subsection{Ken Steinfeldt}
+
+\end{document}
