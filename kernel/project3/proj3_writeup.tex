@@ -30,23 +30,23 @@
 	\author{Kristen Patterson, Kenneth Steinfeldt}
 	\date{November 13, 2017}
 	\maketitle
-	\vspace{4cm}
-	\begin{abstract}
-		\noindent 
-			\noindent
-	\end{abstract}
 \end{titlepage}
 
 \section{Project Design}
+The first thing we tried to do for this assignment was to try and find a way to create a build a block driver. After finding resources online and getting it properly implemented we started working on encryption. Then we went about reading about crypto and how to properly use it. The first thing we handled was creating a key and an encryption and making sure it was created successfully. Then we implemented in our program and did various testing through the means described below to make sure it got encrypted.
 
 \section{Project Questions}
 \subsection{What do you think the main point of this assignment is?}
+We think the main point of this assignment is to further understand how the block works in the kernel and also to familiarize ourselves with using crypto. We were also taught how to create a partition and mount the filesystem on the VM. This assignment felt like it was to teach us a little more of running things directly on the VM as well.
 
 \subsection{How did you personally approach the problem?}
+The first part of this problem was making a block device to pull into the VM. After we had completed that we focused on the core part of the assignment, namely the crypto. This required figuring out where to properly place the crypto in the block device as well as making sure it properly runs without breaking. After we did that we figured out how to properly test it by making sure we knew the exact function it provides and how to work with it. After that, we fixed our program again and tested for correctness. We did this by having to create a partition and mounting a filesystem. After that we could see that our program was correct.
 
 \subsection{How did you ensure your solution was correct?}
+A lot of the final testing we used to test for correctness is described below for the T.A. Mainly it involves input text into a file and making sure that the partition is encrypted. Outside of that we used print statements to make sure processes were being handled correctly.
 
 \subsection{What did you learn?}
+We mainly learned how to use crypto and how to pull files into the VM in order to work with them. Another portion that was fairly difficult that we learned quite a bit from was how to create a partition and mount it in the VM.
 
 \subsection{How should the TA test your program?}
 Firstly start by taking the files from the patch file submitted and putting them in linux-yocto-3.19/drivers/block/.
@@ -77,7 +77,7 @@ It should ask for a login password and then copy it over
 Then you need to install the module while setting the key like so:
 
 \begin{lstlisting}
-insmod sbd.ko key="1234567890123456" keylen=16
+insmod sbd.ko crypt_key="passwordpassword" crypt_keylen=16
 \end{lstlisting}
 
 After that is done then you need to run the command to make a partition and follow the steps to do so:
@@ -136,6 +136,8 @@ This should prove we have successfully created an encrypted block device.
 		Ken Steinfeldt & November 7, 2017 & creates project3 dir and start file \\ \hline
 		Ken Steinfeldt & November 7, 2017 & assignment name header \\ \hline
 		Kristen Patterson & November 8, 2017 & finished file \\ \hline
+		Kristen Patterson & November 15, 2017 & made slight adjustments to files \\ \hline
+		Ken Steinfeldt & November 15, 2017 & finished document \\ \hline
 	\end{tabular}
 \end{center}
 
@@ -147,5 +149,7 @@ Then I found a working Makefile and Kconfig to transfer over with it.
 Afterwards I went about making sure it would compile and then figuring out how to run it to get it to work.
 
 \subsection{Ken Steinfeldt}
-
+I created the assignment and outline around the 7th.
+I also helped by making sure the code was correct and looking over some slight adjustments.
+Finally I finished up the parts of the document that still need to be completed before submission.
 \end{document}
