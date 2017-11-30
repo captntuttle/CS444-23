@@ -72,6 +72,9 @@
 
 #include <linux/atomic.h>
 
+#include <linux/syscalls.h>
+#include <linux/linkage.h>
+
 #include "slab.h"
 /*
  * slob_block has a field 'units', which indicates size of block if +ve,
@@ -86,6 +89,12 @@ typedef s16 slobidx_t;
 #else
 typedef s32 slobidx_t;
 #endif
+
+// required vars
+unsigned long pcount = 0;
+unsigned long free = 0;
+int used_m = 0;
+int claimed_m = 0;
 
 struct slob_block {
 	slobidx_t units;
@@ -268,10 +277,13 @@ static void *slob_page_alloc(struct page *sp, size_t size, int align)
 static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 {
 	struct page *sp;
+    struct page *sp_alt;
+    struct list_head *temp;
 	struct list_head *prev;
 	struct list_head *slob_list;
 	slob_t *b = NULL;
 	unsigned long flags;
+    free = 0;
 
 	if (size < SLOB_BREAK1)
 		slob_list = &free_slob_small;
@@ -296,19 +308,56 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 			continue;
 
 		/* Attempt to alloc */
+        /** | Don't want to attempt to alloc yet
 		prev = sp->lru.prev;
 		b = slob_page_alloc(sp, size, align);
 		if (!b)
 			continue;
+         **/
+        
+        if (sp_alt == NULL)
+        {
+            sp_alt = sp;
+        }
 
 		/* Improve fragment distribution and reduce our average
 		 * search time by starting our next search here. (see
 		 * Knuth vol 1, sec 2.5, pg 449) */
-		if (prev != slob_list->prev &&
+		/** | We don't want this here
+        if (prev != slob_list->prev &&
 				slob_list->next != prev->next)
 			list_move_tail(slob_list, prev->next);
 		break;
+         **/
+        // look for smallest possible page
+        if (sp->units < sp_alt->units) {
+            sp_alt = sp;
+        }
 	}
+    // attempt to allocate
+    if (sp_alt != NULL)
+    {
+        b = slob_page_alloc(sp_alt, size, align);
+    }
+    
+    // iterate through small list
+    temp = &free_slob_small;
+    list_for_each_entry(sp, temp, list) {
+        free += sp->units;
+    }
+    
+    // iterate through medium list
+    temp = &free_slob_medium;
+    list_for_each_entry(sp, temp, list) {
+        free += sp->units;
+    }
+    
+    // iterate through large list
+    temp = &free_slob_large;
+    list_for_each_entry(sp, temp, list) {
+        free += sp->units;
+    }
+    
 	spin_unlock_irqrestore(&slob_lock, flags);
 
 	/* Not enough space: must allocate a new page */
@@ -328,9 +377,16 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 		b = slob_page_alloc(sp, size, align);
 		BUG_ON(!b);
 		spin_unlock_irqrestore(&slob_lock, flags);
+        
+        // account for new page
+        pcount++;
+        claimed_m += PAGE_SIZE;
 	}
 	if (unlikely((gfp & __GFP_ZERO) && b))
 		memset(b, 0, size);
+    
+    used_m += size;
+    
 	return b;
 }
 
@@ -351,6 +407,8 @@ static void slob_free(void *block, int size)
 
 	sp = virt_to_page(block);
 	units = SLOB_UNITS(size);
+    
+    used_m -= size;
 
 	spin_lock_irqsave(&slob_lock, flags);
 
@@ -362,6 +420,7 @@ static void slob_free(void *block, int size)
 		__ClearPageSlab(sp);
 		page_mapcount_reset(sp);
 		slob_free_pages(b, 0);
+        pcount--;
 		return;
 	}
 
