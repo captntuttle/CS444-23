@@ -33,15 +33,30 @@
 \end{titlepage}
 
 \section{Project Design}
+The slob already exists in linux but applies the first fit algorithm because it is better.
+Knowing this, because we were told this in lecture, we simply modified the slob.c file that is included in the linux kernel by implementing the best fit algorithm.
+
+The best fit algorithm works by simply looking through the slob for the closest fit to the required size.
+When the best fit is found a new page is allocated with that memory.
+This ensures the most space efficent use of memory.
 
 \section{Project Questions}
 \subsection{What do you think the main point of this assignment is?}
+To understand that the linux kernel already contains logic that can be modified such as this slob slab.
+We also believe that the use of system calls are a main point of this assignment.
 
 \subsection{How did you personally approach the problem?}
+Due to lecture we already knew that we only needed to modify the existing slob.c file found in the Linux kernel in order to complete the assignment.
+Therefore, in order to implement the best fit algorithm into the slob we only needed to remove the first fit aspects and implement the best fit algorithms that we found online.
 
 \subsection{How did you ensure your solution was correct?}
+To be honest, We built the kernel successfully and booted it.
+The boot process took significantly longer than previously and we counted that as success.
+We ran out of time to properly test the implementation with code.
 
 \subsection{What did you learn?}
+We learned why best fit is not used, it takes a very long time to boot.
+Furthermore we learned more about the slab and memory allocation in the Linux kernel as well as the use of systemcalls.
 
 \subsection{How should the TA test your program?}
 
