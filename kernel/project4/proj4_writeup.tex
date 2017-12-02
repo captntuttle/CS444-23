@@ -59,6 +59,8 @@ We learned why best fit is not used, it takes a very long time to boot.
 Furthermore we learned more about the slab and memory allocation in the Linux kernel as well as the use of systemcalls.
 
 \subsection{How should the TA test your program?}
+The TA can boot the VM and see the reduced boot time to see that the best fit algorithm is being used.
+Also the added system calls sys_slob_free (500) and sys_slob_used (501) can be used to verify memory usage.
 
 \section{Version Control Log}
 
